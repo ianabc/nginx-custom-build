@@ -1,8 +1,8 @@
-FROM centos:6
-MAINTAINER "JCU eResearch Centre" <eresearch.nospam@jcu.edu.au>
+FROM centos:7
+MAINTAINER "Ian Allison" <iana@pims.math.ca>
 
 # Configure EPEL for GeoIP-devel
-RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+RUN rpm -ivh https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
 
 # Install required packages for building
 RUN yum install -y \

@@ -9,11 +9,10 @@ if [ -d '/app' ]; then
     patch_dir='/app'
 else
     patch_dir=$(mktemp)
-    git clone https://github.com/jcu-eresearch/nginx-custom-build.git "$patch_dir"
+    git clone https://github.com/ianabc/nginx-custom-build.git "$patch_dir"
 fi
-cp "$patch_dir/nginx-centos-6.repo" /etc/yum.repos.d/
-cp "$patch_dir/nginx-eresearch.patch" ~/rpmbuild/SPECS/
-cp "$patch_dir/nginx-xslt-html-parser.patch" ~/rpmbuild/SOURCES/
+cp "$patch_dir/nginx-centos-7.repo" /etc/yum.repos.d/
+cp "$patch_dir/nginx-shibboleth.patch" ~/rpmbuild/SPECS/
 # Remove temp directory if not Docker
 if ! [ -d '/app' ]; then
     rm -rf "$patch_dir"
@@ -33,31 +32,12 @@ fi
 sudo rpm -ihv nginx*.src.rpm
 
 #Get various add-on modules for nginx
-#XXX git clone -b [tag] isn't supported on git 1.7 (RHEL 6)
 pushd ~/rpmbuild/SOURCES
 
     #Headers More module
     git clone https://github.com/openresty/headers-more-nginx-module
     pushd headers-more-nginx-module
     git checkout v0.30rc1
-    popd
-
-    #Fancy Index module
-    git clone https://github.com/aperezdc/ngx-fancyindex.git
-    pushd ngx-fancyindex
-    git checkout ba8b4ec
-    popd
-
-    #AJP module
-    git clone https://github.com/yaoweibin/nginx_ajp_module.git
-    pushd nginx_ajp_module
-    git checkout bf6cd93
-    popd
-
-    #LDAP authentication module
-    git clone https://github.com/kvspb/nginx-auth-ldap.git
-    pushd nginx-auth-ldap
-    git checkout d0f2f82
     popd
 
     #Shibboleth module
@@ -70,7 +50,7 @@ popd
 
 #Prep and patch the nginx specfile for the RPMs
 pushd ~/rpmbuild/SPECS
-    patch -p1 < nginx-eresearch.patch
+    patch -p1 < nginx-shibboleth.patch
     spectool -g -R nginx.spec
     yum-builddep -y nginx.spec
     rpmbuild -ba nginx.spec

@@ -1,5 +1,5 @@
 [nginx-source]
 name=nginx repo
-baseurl=http://nginx.org/packages/centos/6/SRPMS/
+baseurl=http://nginx.org/packages/centos/7/SRPMS/
 gpgcheck=0
 enabled=1

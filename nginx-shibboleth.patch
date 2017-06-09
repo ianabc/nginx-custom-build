@@ -16,10 +16,7 @@ index 00131a4..dd907ae 100644
          --with-http_image_filter_module=dynamic \
          --with-http_geoip_module=dynamic \
          --with-http_perl_module=dynamic \
-+        --add-module=%{bdir}/ngx-fancyindex \
-+        --add-module=%{bdir}/nginx_ajp_module \
 +        --add-module=%{bdir}/headers-more-nginx-module \
-+        --add-module=%{bdir}/nginx-auth-ldap \
 +        --add-dynamic-module=%{bdir}/nginx-http-shibboleth \
          --add-dynamic-module=njs-%{module_njs_shaid}/nginx \
          --with-threads \
@@ -29,10 +26,6 @@ index 00131a4..dd907ae 100644
  Source12: COPYRIGHT
  Source13: njs-%{module_njs_shaid}.tar.gz
 +Source100: headers-more-nginx-module
-+Source101: ngx-fancyindex
-+Source102: nginx_ajp_module
-+Source103: nginx-xslt-html-parser.patch
-+Source104: nginx-auth-ldap
 +Source105: nginx-http-shibboleth
 +
  
@@ -42,7 +35,6 @@ index 00131a4..dd907ae 100644
  BuildRequires: pcre-devel
  BuildRequires: libxslt-devel
  BuildRequires: gd-devel
-+BuildRequires: openldap-devel
  
  Provides: webserver
  
@@ -67,10 +59,7 @@ index 00131a4..dd907ae 100644
  sed -e 's|%%DEFAULTSTART%%||g' -e 's|%%DEFAULTSTOP%%|0 1 2 3 4 5 6|g' \
      -e 's|%%PROVIDES%%|nginx-debug|g' < %{SOURCE2} > nginx-debug.init
 +cp -R -p %SOURCE100 .
-+cp -R -p %SOURCE101 .
-+cp -R -p %SOURCE102 .
 +patch -p1 < %SOURCE103
-+cp -R -p %SOURCE104 .
 +cp -R -p %SOURCE105 .
  
  %build
