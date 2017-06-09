@@ -24,6 +24,6 @@ EXPOSE 80 443
 # 2. Test
 # 3. Copy the RPMs back to the host volume
 CMD /app/nginx-build.sh && \
-  yum install -y ~/rpmbuild/RPMS/x86_64/nginx-*.rpm && \
+  yum install -y ~/rpmbuild/RPMS/{noarch,x86_64}/nginx-*.rpm && \
   nginx -t && \
   rsync --no-relative -vahu ~/rpmbuild/RPMS ~/rpmbuild/SRPMS /app/build
