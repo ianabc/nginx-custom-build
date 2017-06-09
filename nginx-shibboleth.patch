@@ -1,120 +1,161 @@
+From 5fd5932f3079cf0d71323fc59c0c2a2dd60fa69e Mon Sep 17 00:00:00 2001
+From: Ian Allison <iana@pims.math.ca>
+Date: Fri, 9 Jun 2017 20:13:08 +0000
+Subject: [PATCH 1/2] adding more headers and shibboleth
+
+Signed-off-by: Ian Allison <iana@pims.math.ca>
+---
+ nginx.spec | 46 ++++++++++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 46 insertions(+)
+
 diff --git a/nginx.spec b/nginx.spec
-index 00131a4..dd907ae 100644
+index 22f0e5e..60546b1 100644
 --- a/nginx.spec
 +++ b/nginx.spec
-@@ -74,6 +74,9 @@ BuildRequires: libGeoIP-devel
- %define module_njs_shaid             1c50334fbea6
- %define module_njs_version           %{main_version}.0.0.20160414.%{module_njs_shaid}
- %define module_njs_release           1%{?dist}.ngx
-+%define module_shib_shaid            d37376531c0575bc5cb20b2a92c829c7c49e004b
-+%define module_shib_version          %{main_version}.0.0.20160427.%{module_shib_shaid}
-+%define module_shib_release          1%{?dist}.ngx
+@@ -38,6 +38,8 @@ Source103:         404.html
+ Source104:         50x.html
+ Source200:         README.dynamic
+ Source210:         UPGRADE-NOTES-1.6-to-1.10
++Source300:         headers-more-nginx-module
++Source301:         nginx-http-shibboleth
  
- %define bdir %{_builddir}/%{name}-%{main_version}
+ # removes -Werror in upstream build scripts.  -Werror conflicts with
+ # -D_FORTIFY_SOURCE=2 causing warnings to turn into errors.
+@@ -83,6 +85,7 @@ BuildArch:         noarch
+ Requires:          nginx-mod-http-geoip = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-http-image-filter = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-http-perl = %{epoch}:%{version}-%{release}
++Requires:          nginx-mod-http-shibboleth = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-http-xslt-filter = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-mail = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-stream = %{epoch}:%{version}-%{release}
+@@ -143,6 +146,22 @@ Requires:          perl(:MODULE_COMPAT_%(eval "`%{__perl} -V:version`"; echo $ve
+ %description mod-http-perl
+ %{summary}.
  
-@@ -112,6 +115,11 @@ BuildRequires: libGeoIP-devel
-         --with-http_image_filter_module=dynamic \
-         --with-http_geoip_module=dynamic \
-         --with-http_perl_module=dynamic \
-+        --add-module=%{bdir}/headers-more-nginx-module \
-+        --add-dynamic-module=%{bdir}/nginx-http-shibboleth \
-         --add-dynamic-module=njs-%{module_njs_shaid}/nginx \
-         --with-threads \
-         --with-stream \
-@@ -144,6 +152,13 @@ Source10: nginx.suse.logrotate
- Source11: nginx-debug.service
- Source12: COPYRIGHT
- Source13: njs-%{module_njs_shaid}.tar.gz
-+Source100: headers-more-nginx-module
-+Source105: nginx-http-shibboleth
++%package mod-http-headers-more-filter
++Group:             System Environment/Daemons
++Summary:           Nginx HTTP more headers module
++Requires:          nginx
 +
- 
- License: 2-clause BSD-like license
- 
-@@ -152,6 +167,7 @@ BuildRequires: zlib-devel
- BuildRequires: pcre-devel
- BuildRequires: libxslt-devel
- BuildRequires: gd-devel
- 
- Provides: webserver
- 
-@@ -209,6 +225,15 @@ Summary: nginx nJScript module
- %description module-njs
- Dynamic nJScript module for nginx.
- 
-+%package module-shib
-+Version: %{module_shib_version}
-+Release: %{module_shib_release}
-+Group: %{_group}
-+Requires: nginx = %{?epoch:%{epoch}:}%{main_version}-%{main_release}
-+Summary: nginx shibboleth module
-+%description module-shib
-+Dynamic Shibboleth auth request module for nginx
++%description mod-http-headers-more-filter
++%{summary}.
 +
- %prep
- %setup -q
- tar xvzf %SOURCE13
-@@ -217,6 +242,12 @@ sed -e 's|%%DEFAULTSTART%%|2 3 4 5|g' -e 's|%%DEFAULTSTOP%%|0 1 6|g' \
-     -e 's|%%PROVIDES%%|nginx|g' < %{SOURCE2} > nginx.init
- sed -e 's|%%DEFAULTSTART%%||g' -e 's|%%DEFAULTSTOP%%|0 1 2 3 4 5 6|g' \
-     -e 's|%%PROVIDES%%|nginx-debug|g' < %{SOURCE2} > nginx-debug.init
-+cp -R -p %SOURCE100 .
-+patch -p1 < %SOURCE103
-+cp -R -p %SOURCE105 .
- 
- %build
- ./configure %{COMMON_CONFIGURE_ARGS} \
-@@ -238,6 +269,8 @@ make %{?_smp_mflags}
-     %{bdir}/objs/src/http/modules/perl/blib/arch/auto/nginx/nginx-debug.so
- %{__mv} %{bdir}/objs/ngx_http_js_module.so \
-     %{bdir}/objs/ngx_http_js_module-debug.so
-+%{__mv} %{bdir}/objs/ngx_http_shibboleth_module.so \
-+    %{bdir}/objs/ngx_http_shibboleth_module-debug.so
- ./configure %{COMMON_CONFIGURE_ARGS} \
-     --with-cc-opt="%{WITH_CC_OPT}" \
-     %{?perlldopts}
-@@ -326,6 +359,8 @@ cd $RPM_BUILD_ROOT%{_sysconfdir}/nginx && \
-     $RPM_BUILD_ROOT%{perl_vendorarch}/auto/nginx/nginx-debug.so
- %{__install} -m644 %{bdir}/objs/ngx_http_js_module-debug.so \
-     $RPM_BUILD_ROOT%{_libdir}/nginx/modules/ngx_http_js_module-debug.so
-+%{__install} -m644 %{bdir}/objs/ngx_http_shibboleth_module-debug.so \
-+    $RPM_BUILD_ROOT%{_libdir}/nginx/modules/ngx_http_shibboleth_module-debug.so
- 
- %clean
- %{__rm} -rf $RPM_BUILD_ROOT
-@@ -400,6 +435,10 @@ cd $RPM_BUILD_ROOT%{_sysconfdir}/nginx && \
- %attr(0644,root,root) %{_libdir}/nginx/modules/ngx_http_js_module.so
- %attr(0644,root,root) %{_libdir}/nginx/modules/ngx_http_js_module-debug.so
- 
-+%files module-shib
-+%attr(0644,root,root) %{_libdir}/nginx/modules/ngx_http_shibboleth_module.so
-+%attr(0644,root,root) %{_libdir}/nginx/modules/ngx_http_shibboleth_module-debug.so
++%package mod-http-shibboleth
++Group:             System Environment/Daemons
++Summary:           Nginx HTTP Shibboleth module
++Requires:          nginx
 +
- %pre
- # Add the "nginx" user
- getent group %{nginx_group} >/dev/null || groupadd -r %{nginx_group}
-@@ -540,6 +579,24 @@ https://www.nginx.com/resources/wiki/nginScript/
- BANNER
++%description mod-http-shibboleth
++%{summary}.
++
+ %package mod-http-xslt-filter
+ Group:             System Environment/Daemons
+ Summary:           Nginx XSLT module
+@@ -174,6 +193,8 @@ Requires:          nginx
+ %patch0 -p0
+ cp %{SOURCE200} .
+ cp %{SOURCE210} .
++cp -R -p %{SOURCE300} .
++cp -R -p %{SOURCE301} .
+ 
+ %if 0%{?rhel} < 8
+ sed -i -e 's#KillMode=.*#KillMode=process#g' %{SOURCE10}
+@@ -226,6 +247,8 @@ export DESTDIR=%{buildroot}
+     --with-http_slice_module \
+     --with-http_stub_status_module \
+     --with-http_perl_module=dynamic \
++    --add-module=%{_sourcedir}/headers-more-nginx-module \
++    --add-dynamic-module=%{_sourcedir}/nginx-http-shibboleth \
+     --with-mail=dynamic \
+     --with-mail_ssl_module \
+     --with-pcre \
+@@ -296,6 +319,10 @@ echo 'load_module "%{_libdir}/nginx/modules/ngx_http_image_filter_module.so";' \
+     > %{buildroot}%{_datadir}/nginx/modules/mod-http-image-filter.conf
+ echo 'load_module "%{_libdir}/nginx/modules/ngx_http_perl_module.so";' \
+     > %{buildroot}%{_datadir}/nginx/modules/mod-http-perl.conf
++echo 'load_module "%{_libdir}/nginx/modules/ngx_http_headers_more_filter_module.so";' \
++    > %{buildroot}%{_datadir}/nginx/modules/mod-http-headers-more-filter.conf
++echo 'load_module "%{_libdir}/nginx/modules/ngx_http_shibboleth_module.so";' \
++    > %{buildroot}%{_datadir}/nginx/modules/mod-http-shibboleth.conf
+ echo 'load_module "%{_libdir}/nginx/modules/ngx_http_xslt_filter_module.so";' \
+     > %{buildroot}%{_datadir}/nginx/modules/mod-http-xslt-filter.conf
+ echo 'load_module "%{_libdir}/nginx/modules/ngx_mail_module.so";' \
+@@ -328,6 +355,16 @@ if [ $1 -eq 1 ]; then
+     /usr/bin/systemctl reload nginx.service >/dev/null 2>&1 || :
  fi
  
-+%post module-shib
++%post mod-http-headers-more-filter
 +if [ $1 -eq 1 ]; then
-+    cat <<BANNER
-+----------------------------------------------------------------------
-+
-+The Shibboleth dynamic module for nginx has been installed.
-+To enable this module, add the following to /etc/nginx/nginx.conf
-+and reload nginx:
-+
-+    load_module modules/ngx_http_shibboleth_module.so;
-+
-+Please refer to the module documentation for further details:
-+https://github.com/nginx-shib/nginx-http-shibboleth
-+
-+----------------------------------------------------------------------
-+BANNER
++    /usr/bin/systemctl reload nginx.service >/dev/null 2>&1 || :
 +fi
 +
++%post mod-http-shibboleth
++if [ $1 -eq 1 ]; then
++    /usr/bin/systemctl reload nginx.service >/dev/null 2>&1 || :
++fi
++
+ %post mod-http-xslt-filter
+ if [ $1 -eq 1 ]; then
+     /usr/bin/systemctl reload nginx.service >/dev/null 2>&1 || :
+@@ -343,6 +380,7 @@ if [ $1 -eq 1 ]; then
+     /usr/bin/systemctl reload nginx.service >/dev/null 2>&1 || :
+ fi
+ 
++
  %preun
- if [ $1 -eq 0 ]; then
- %if %use_systemd
+ %systemd_preun nginx.service
+ 
+@@ -415,6 +453,14 @@ fi
+ %{perl_vendorarch}/nginx.pm
+ %{perl_vendorarch}/auto/nginx/nginx.so
+ 
++%files mod-http-headers-more-filter
++%{_datadir}/nginx/modules/mod-http-headers-more-filter.conf
++%{_libdir}/nginx/modules/ngx_http_headers_more_filter_module.so
++
++%files mod-http-shibboleth
++%{_datadir}/nginx/modules/mod-http-shibboleth.conf
++%{_libdir}/nginx/modules/ngx_http_shibboleth_module.so
++
+ %files mod-http-xslt-filter
+ %{_datadir}/nginx/modules/mod-http-xslt-filter.conf
+ %{_libdir}/nginx/modules/ngx_http_xslt_filter_module.so
+-- 
+1.8.3.1
+
+
+From 22dfb788da2c5f1eaa23f6900309426a2de40a19 Mon Sep 17 00:00:00 2001
+From: Ian Allison <iana@pims.math.ca>
+Date: Fri, 9 Jun 2017 20:56:34 +0000
+Subject: [PATCH 2/2] make headers a dynamic module
+
+Signed-off-by: Ian Allison <iana@pims.math.ca>
+---
+ nginx.spec | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/nginx.spec b/nginx.spec
+index 60546b1..6413798 100644
+--- a/nginx.spec
++++ b/nginx.spec
+@@ -85,6 +85,7 @@ BuildArch:         noarch
+ Requires:          nginx-mod-http-geoip = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-http-image-filter = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-http-perl = %{epoch}:%{version}-%{release}
++Requires:          nginx-mod-http-headers-more-filter = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-http-shibboleth = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-http-xslt-filter = %{epoch}:%{version}-%{release}
+ Requires:          nginx-mod-mail = %{epoch}:%{version}-%{release}
+@@ -247,7 +248,7 @@ export DESTDIR=%{buildroot}
+     --with-http_slice_module \
+     --with-http_stub_status_module \
+     --with-http_perl_module=dynamic \
+-    --add-module=%{_sourcedir}/headers-more-nginx-module \
++    --add-dynamic-module=%{_sourcedir}/headers-more-nginx-module \
+     --add-dynamic-module=%{_sourcedir}/nginx-http-shibboleth \
+     --with-mail=dynamic \
+     --with-mail_ssl_module \
+-- 
+1.8.3.1
+

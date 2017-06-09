@@ -18,12 +18,10 @@ if ! [ -d '/app' ]; then
     rm -rf "$patch_dir"
 fi
 
+
 # Download specific nginx version or just the latest version
-if [ "$_NGINX_VERSION" ]; then
-    yumdownloader --source "nginx-$_NGINX_VERSION"
-else
-    yumdownloader --source nginx
-fi
+_NGINX_VERSION=${_NGINX_VERSION:-$(repoquery --nvr nginx)}
+yumdownloader --source $_NGINX_VERSION
 if ! [ $? -eq 0 ]; then
     echo "Couldn't download nginx source RPM. Aborting build."
     exit 1
